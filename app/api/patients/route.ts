@@ -17,18 +17,26 @@ export async function GET(req: Request) {
 
   const queryString = `
     SELECT * FROM c 
-    WHERE 
-      (
-        @name != '' AND (
+    WHERE ${
+        name ? `
+        (
           CONTAINS(c.FIRST, @name) OR 
           CONTAINS(c.LAST, @name) OR 
           CONTAINS(c.SUFFIX, @name) OR 
           CONTAINS(c.PREFIX, @name)
         )
-      ) AND
-      (c.ZIP = @zipcode) OR
-      (c.BIRTHDATE = @dob)
+        ` : ''
+      }
+      ${
+        zipcode ? (name ? 'AND' : '') + `(c.ZIP = @zipcode)` : ''
+      }
+      ${
+        dob ? (name || zipcode ? 'AND' : '') + `(c.BIRTHDATE = @dob)` : ''
+      }
   `;
+
+  console.log('Executing query:', queryString, { name, zipcode, dob });
+
   const query = {
     query: queryString, 
     parameters: [
