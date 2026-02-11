@@ -49,3 +49,4 @@ export async function GET(req: Request) {
   const { resources } = await container.items.query(query).fetchAll();
   return NextResponse.json(resources);
 }
+

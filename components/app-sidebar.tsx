@@ -14,12 +14,12 @@ import Link from "next/link"
 
 export function AppSidebar() {
     return (
-        <Sidebar>
+        <Sidebar variant="inset" collapsible="icon">
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton>
-                            <Cross size={80} color="#00703f" fill="#00703f" /> 
+                            <Cross size={80} color="#00703f" fill="#00703f" />
                             <div className="text-[#00703f] font-bold text-xl">Care Management</div>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -32,7 +32,7 @@ export function AppSidebar() {
                             <SidebarMenuButton>
                                 <UserRoundSearch />
                                 <Link href="/patientsearch">
-                                Patient Search
+                                    Patient Search
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
@@ -40,7 +40,7 @@ export function AppSidebar() {
                     <SidebarMenu>
                         <SidebarMenuItem>
                             <SidebarMenuButton>
-                                <LayoutDashboard /> <Link href="/dashboard">Dashboard</Link>
+                                <LayoutDashboard /> <Link href="/">Dashboard</Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
                     </SidebarMenu>
