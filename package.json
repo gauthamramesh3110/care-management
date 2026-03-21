@@ -10,6 +10,9 @@
   },
   "dependencies": {
     "@azure/cosmos": "^4.9.1",
+    "@azure/msal-browser": "^4.30.0",
+    "@azure/msal-node": "^3.8.10",
+    "@azure/msal-react": "^3.0.29",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.563.0",
