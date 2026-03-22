@@ -21,12 +21,8 @@ export async function GET(
             );
         }
 
-        const { database } = await client.databases.createIfNotExists({
-            id: 'clinicaldata',
-        });
-        const { container } = await database.containers.createIfNotExists({
-            id: 'patients',
-        });
+        const database = client.database('clinical');
+        const container = database.container('patients');
 
         // Query patient by ID from Cosmos DB
         const query = {

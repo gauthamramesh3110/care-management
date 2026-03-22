@@ -7,9 +7,12 @@ import { Label } from "@/components/ui/label";
 
 export default function SignUpPage() {
   const [email, setEmail] = useState("");
+  const [givenName, setGivenName] = useState("");
+  const [surname, setSurname] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [otp, setOtp] = useState("");
   const [continuationToken, setContinuationToken] = useState("");
-  const [step, setStep] = useState<"email" | "otp">("email");
+  const [step, setStep] = useState<"details" | "otp">("details");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -22,7 +25,7 @@ export default function SignUpPage() {
       const res = await fetch("/api/auth/native/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "send-otp", email })
+        body: JSON.stringify({ action: "send-otp", email, givenName, surname, displayName })
       });
       const data = await res.json();
       
@@ -78,8 +81,41 @@ export default function SignUpPage() {
           </div>
         )}
 
-        {step === "email" ? (
+        {step === "details" ? (
           <form onSubmit={handleSendOtp} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="givenName">Given Name</Label>
+              <Input
+                id="givenName"
+                type="text"
+                placeholder="John"
+                value={givenName}
+                onChange={(e) => setGivenName(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="surname">Surname</Label>
+              <Input
+                id="surname"
+                type="text"
+                placeholder="Doe"
+                value={surname}
+                onChange={(e) => setSurname(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="displayName">Display Name</Label>
+              <Input
+                id="displayName"
+                type="text"
+                placeholder="John Doe"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                required
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input

@@ -1,11 +1,27 @@
 import PatientDetails from "@/components/patient-details";
+import { CosmosClient } from "@azure/cosmos";
+
+const client = new CosmosClient({
+    endpoint: process.env.COSMOS_DB_ENDPOINT!,
+    key: process.env.COSMOS_DB_KEY!,
+});
 
 export default async function PatientDetailsPage({ params }: { params: { id: string } }) {
     const { id } = await params;
-    const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/patients/${id}`;
-    console.log('Fetching patient details from:', url);
-    const res = await fetch(url);
-    const patient = await res.json();
+
+    const container = client.database("clinical").container("patients");
+    const { resources } = await container.items
+        .query({
+            query: "SELECT * FROM c WHERE c.id = @id",
+            parameters: [{ name: "@id", value: id }],
+        })
+        .fetchAll();
+
+    if (resources.length === 0) {
+        return <div className="p-4">Patient not found</div>;
+    }
+
+    const patient = resources[0];
     return (
         <div className="p-4 flex flex-row gap-4">
             <div className="bg-gray-100 p-4 rounded w-1/3">

@@ -8,8 +8,8 @@ const client = new CosmosClient({
 
 export async function GET(req: Request) {
   const q = new URL(req.url).searchParams.get('q') || '';
-  const { database } = await client.databases.createIfNotExists({ id: 'clinicaldata' });
-  const { container } = await database.containers.createIfNotExists({ id: 'patients' });
+  const database = client.database('clinical');
+  const container = database.container('patients');
 
   const name = new URL(req.url).searchParams.get('name') || '';
   const zipcode = parseInt(new URL(req.url).searchParams.get('zipcode') || '0');

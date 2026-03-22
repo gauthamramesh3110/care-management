@@ -5,11 +5,12 @@ import { nativeAuthApi } from "@/lib/native-auth";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { action, email, otp, continuationToken } = body;
+    const { action, email, otp, continuationToken, givenName, surname, displayName } = body;
 
     if (action === "send-otp") {
       // Step 1: Start sign-up
-      const startData = await nativeAuthApi.signUpStart(email);
+      const attributes = { givenName, surname, displayName };
+      const startData = await nativeAuthApi.signUpStart(email, attributes);
 
       if (startData.error) {
         throw new Error(startData.error_description || startData.error);

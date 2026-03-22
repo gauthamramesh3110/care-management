@@ -14,9 +14,12 @@ export const nativeAuthApi = {
   // ─── Sign-Up Flow ────────────────────────────────────────────────────
 
   /** Step 1: Start the sign-up process */
-  async signUpStart(email: string) {
+  async signUpStart(email: string, attributes?: Record<string, string>) {
     const url = `${authority}/signup/v1.0/start`;
-    const body = `client_id=${clientId}&challenge_type=oob%20password%20redirect&username=${encodeURIComponent(email)}`;
+    let body = `client_id=${clientId}&challenge_type=oob%20password%20redirect&username=${encodeURIComponent(email)}`;
+    if (attributes) {
+      body += `&attributes=${encodeURIComponent(JSON.stringify(attributes))}`;
+    }
 
     const response = await fetch(url, {
       method: "POST",

@@ -1,4 +1,4 @@
-export function middleware(request: any) {
+export function proxy(request: any) {
   const { pathname } = request.nextUrl;
   
   // Public routes
