@@ -27,12 +27,14 @@ interface ClinicalDataTableProps {
     title: string;
     columns: ClinicalColumn[];
     records: Record<string, unknown>[];
+    totalCount: number;
 }
 
 export default function ClinicalDataTable({
     title,
     columns,
     records,
+    totalCount,
 }: ClinicalDataTableProps) {
     const [selectedRecord, setSelectedRecord] = useState<Record<
         string,
@@ -42,7 +44,7 @@ export default function ClinicalDataTable({
     return (
         <div className="bg-white border rounded p-4">
             <div className="flex items-center justify-between mb-3">
-                <h3 className="text-md font-semibold">{title}</h3>
+                <h3 className="text-md font-semibold">{title} <span className="text-sm font-normal text-muted-foreground">({totalCount})</span></h3>
                 <div className="flex gap-2">
                     <Button variant="outline" size="sm" disabled>
                         View All
