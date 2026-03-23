@@ -8,4 +8,11 @@ export const msalConfig: Configuration = {
   },
 };
 
-export const msalApp = new ConfidentialClientApplication(msalConfig);
+let _msalApp: ConfidentialClientApplication | null = null;
+
+export function getMsalApp(): ConfidentialClientApplication {
+  if (!_msalApp) {
+    _msalApp = new ConfidentialClientApplication(msalConfig);
+  }
+  return _msalApp;
+}

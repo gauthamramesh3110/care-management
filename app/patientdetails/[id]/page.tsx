@@ -1,13 +1,6 @@
 import PatientDetails from "@/components/patient-details";
 import ClinicalDataTable, { ClinicalColumn } from "@/components/clinical-data-table";
-import { CosmosClient } from "@azure/cosmos";
-
-const client = new CosmosClient({
-    endpoint: process.env.COSMOS_DB_ENDPOINT!,
-    key: process.env.COSMOS_DB_KEY!,
-});
-
-const db = client.database("clinical");
+import { getCosmosClient } from "@/lib/cosmos";
 
 interface ClinicalSection {
     title: string;
@@ -90,6 +83,7 @@ const clinicalSections: ClinicalSection[] = [
 ];
 
 async function fetchTop3WithCount(containerName: string, dateField: string, patientId: string) {
+    const db = getCosmosClient().database("clinical");
     const container = db.container(containerName);
     const [top3Result, countResult] = await Promise.all([
         container.items
@@ -111,7 +105,7 @@ async function fetchTop3WithCount(containerName: string, dateField: string, pati
 export default async function PatientDetailsPage({ params }: { params: { id: string } }) {
     const { id } = await params;
 
-    const container = db.container("patients");
+    const container = getCosmosClient().database("clinical").container("patients");
     const { resources } = await container.items
         .query({
             query: "SELECT * FROM c WHERE c.id = @id",

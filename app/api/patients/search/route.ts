@@ -1,10 +1,5 @@
 import { NextResponse } from 'next/server';
-import { CosmosClient } from '@azure/cosmos';
-
-const client = new CosmosClient({
-  endpoint: process.env.COSMOS_DB_ENDPOINT!,
-  key: process.env.COSMOS_DB_KEY!,
-});
+import { getCosmosClient } from '@/lib/cosmos';
 
 export async function GET(req: Request) {
   const q = new URL(req.url).searchParams.get('q')?.trim() || '';
@@ -13,7 +8,7 @@ export async function GET(req: Request) {
     return NextResponse.json([]);
   }
 
-  const database = client.database('clinical');
+  const database = getCosmosClient().database('clinical');
   const container = database.container('patients');
 
   const query = {

@@ -1,15 +1,10 @@
 import { NextResponse } from 'next/server';
-import { CosmosClient } from '@azure/cosmos';
+import { getCosmosClient } from '@/lib/cosmos';
 import type { Patient } from '@/types/patient';
-
-const client = new CosmosClient({
-    endpoint: process.env.COSMOS_DB_ENDPOINT,
-    key: process.env.COSMOS_DB_KEY,
-});
 
 export async function GET(
     req: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const { id } = await params;
@@ -21,7 +16,7 @@ export async function GET(
             );
         }
 
-        const database = client.database('clinical');
+        const database = getCosmosClient().database('clinical');
         const container = database.container('patients');
 
         // Query patient by ID from Cosmos DB

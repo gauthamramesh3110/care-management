@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { msalApp } from "@/lib/msal";
+import { getMsalApp } from "@/lib/msal";
 import { cookies } from "next/headers";
 
 export async function GET(request: Request) {
@@ -21,7 +21,7 @@ export async function GET(request: Request) {
   };
 
   try {
-    const response = await msalApp.acquireTokenByCode(tokenRequest);
+    const response = await getMsalApp().acquireTokenByCode(tokenRequest);
     
     // Set an authentication cookie to be consumed by the middleware
     const cookieStore = await cookies();

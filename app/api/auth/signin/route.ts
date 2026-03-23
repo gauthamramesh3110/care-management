@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { msalApp } from "@/lib/msal";
+import { getMsalApp } from "@/lib/msal";
 
 export async function GET(request: Request) {
   const host = request.headers.get("host");
@@ -12,7 +12,7 @@ export async function GET(request: Request) {
   };
 
   try {
-    const response = await msalApp.getAuthCodeUrl(authCodeUrlParameters);
+    const response = await getMsalApp().getAuthCodeUrl(authCodeUrlParameters);
     return NextResponse.redirect(response);
   } catch (error) {
     console.error("Error generating auth url:", error);

@@ -1,12 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { CosmosClient } from '@azure/cosmos';
-
-const client = new CosmosClient({
-  endpoint: process.env.COSMOS_DB_ENDPOINT!,
-  key: process.env.COSMOS_DB_KEY!,
-});
-
-const db = client.database('clinical');
+import { getCosmosClient } from '@/lib/cosmos';
 
 const ALLOWED_CONTAINERS = new Set([
   'allergies', 'careplans', 'conditions', 'immunizations',
@@ -32,6 +25,7 @@ export async function GET(req: NextRequest) {
   const offset = (page - 1) * pageSize;
 
   try {
+    const db = getCosmosClient().database('clinical');
     const container = db.container(containerName);
     const { resources } = await container.items
       .query({
