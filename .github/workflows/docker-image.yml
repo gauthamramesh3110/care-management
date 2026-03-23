@@ -55,6 +55,7 @@ jobs:
 
       # 6. Trigger the deployment on Azure Container Apps
       - name: Deploy to Azure Container Apps
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: azure/cli@v2
         with:
           azcliversion: latest
