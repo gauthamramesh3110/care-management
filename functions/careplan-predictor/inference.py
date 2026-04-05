@@ -5,17 +5,15 @@ from datetime import datetime, timezone
 
 import numpy as np
 import pandas as pd
-import torch
+import onnxruntime as ort
 from azure.cosmos import CosmosClient
-
-from model import TimeAwareClinicalTransformer
 
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Global state — loaded once on cold start
 # ---------------------------------------------------------------------------
-_model = None
+_session = None
 _token_vocab = None
 _target_vocab = None
 _idx_to_class = None
@@ -24,12 +22,6 @@ _cosmos_client = None
 _database = None
 
 CAREPLAN_PREFIX = "CAREP_"
-
-# Training hyperparameters (must match the notebook)
-D_MODEL = 64
-NHEAD = 2
-NUM_LAYERS = 1
-DROPOUT = 0.3
 
 ARTIFACTS_DIR = os.path.join(os.path.dirname(__file__), "artifacts")
 
@@ -56,8 +48,8 @@ CONTAINER_CONFIG = {
 
 
 def _load_artifacts():
-    """Load model weights and vocabulary files once at cold start."""
-    global _model, _token_vocab, _target_vocab, _idx_to_class, _careplan_mapping
+    """Load ONNX model and vocabulary files once at cold start."""
+    global _session, _token_vocab, _target_vocab, _idx_to_class, _careplan_mapping
 
     with open(os.path.join(ARTIFACTS_DIR, "token_vocab.json")) as f:
         _token_vocab = json.load(f)
@@ -70,24 +62,12 @@ def _load_artifacts():
 
     _idx_to_class = {v: k for k, v in _target_vocab.items()}
 
-    vocab_size = len(_token_vocab)
-    num_careplans = len(_target_vocab)
-
-    _model = TimeAwareClinicalTransformer(
-        vocab_size=vocab_size,
-        num_careplans=num_careplans,
-        d_model=D_MODEL,
-        nhead=NHEAD,
-        num_layers=NUM_LAYERS,
-        dropout=DROPOUT,
-    )
-
-    weights_path = os.path.join(ARTIFACTS_DIR, "care_plan_suggestor_transformer.pth")
-    state_dict = torch.load(weights_path, map_location="cpu", weights_only=True)
-    _model.load_state_dict(state_dict)
-    _model.eval()
+    onnx_path = os.path.join(ARTIFACTS_DIR, "care_plan_suggestor_transformer.onnx")
+    _session = ort.InferenceSession(onnx_path)
     logger.info(
-        "Model loaded: vocab_size=%d, num_careplans=%d", vocab_size, num_careplans
+        "ONNX model loaded: vocab_size=%d, num_careplans=%d",
+        len(_token_vocab),
+        len(_target_vocab),
     )
 
 
@@ -244,20 +224,28 @@ def _tokenize_and_predict(context_df: pd.DataFrame) -> dict:
         encoded_tokens.append(token_id)
         times.append(float(event["DAYS_SINCE_START"]))
 
-    # Tensors
-    tokens_tensor = torch.tensor(encoded_tokens, dtype=torch.long).unsqueeze(0)
-    times_tensor = torch.log1p(torch.tensor(times, dtype=torch.float)).unsqueeze(0)
-    mask_tensor = torch.zeros_like(tokens_tensor, dtype=torch.bool)
+    # Numpy arrays for ONNX Runtime
+    tokens_arr = np.array([encoded_tokens], dtype=np.int64)
+    times_arr = np.log1p(np.array([times], dtype=np.float32))
+    mask_arr = np.zeros_like(tokens_arr, dtype=np.bool_)
 
-    # Inference
-    with torch.no_grad():
-        logits = _model(tokens_tensor, times_tensor, mask_tensor)
-        probs = torch.softmax(logits, dim=1)
-        top5_probs, top5_indices = torch.topk(probs, k=min(5, probs.size(1)), dim=1)
+    # Inference via ONNX Runtime
+    ort_inputs = {
+        "tokens": tokens_arr,
+        "time_deltas": times_arr,
+        "pad_mask": mask_arr,
+    }
+    logits = _session.run(None, ort_inputs)[0]
+
+    # Softmax and top-5
+    exp_logits = np.exp(logits - logits.max(axis=1, keepdims=True))
+    probs = exp_logits / exp_logits.sum(axis=1, keepdims=True)
+    top5_indices = np.argsort(probs[0])[::-1][:5]
+    top5_probs = probs[0][top5_indices]
 
     # Map predictions
     predictions = []
-    for prob, idx in zip(top5_probs.squeeze().tolist(), top5_indices.squeeze().tolist()):
+    for prob, idx in zip(top5_probs.tolist(), top5_indices.tolist()):
         code = _idx_to_class.get(idx, str(idx))
         desc = _careplan_mapping.get(code, "Unknown care plan")
         predictions.append(
@@ -276,7 +264,7 @@ def _tokenize_and_predict(context_df: pd.DataFrame) -> dict:
 
 def ensure_loaded():
     """Ensure model and artifacts are loaded (idempotent)."""
-    if _model is None:
+    if _session is None:
         _load_artifacts()
 
 
