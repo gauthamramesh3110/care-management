@@ -5,6 +5,8 @@ on:
     branches: ["main"]
     paths:
       - "functions/careplan-predictor/**"
+      - ".github/workflows/deploy-careplan-predictor.yml"
+  workflow_dispatch:
 
 permissions:
   id-token: write
